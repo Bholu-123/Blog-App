@@ -3,7 +3,6 @@ import { Paper, Typography, CircularProgress, Divider } from '@material-ui/core/
 import { useDispatch, useSelector } from 'react-redux';
 import moment from 'moment';
 import { useParams, useHistory, Link } from 'react-router-dom';
-
 import { getPost, getPostsBySearch } from '../../actions/posts';
 import CommentSection from './CommentSection';
 import useStyles from './styles';

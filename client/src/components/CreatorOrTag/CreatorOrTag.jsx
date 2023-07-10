@@ -2,9 +2,8 @@ import React, { useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Typography, CircularProgress, Grid, Divider } from '@material-ui/core';
 import { useDispatch, useSelector } from 'react-redux';
-
 import Post from '../Posts/Post/Post';
-import { getPostsByCreator, getPostsBySearch } from '../../actions/posts';
+import { getPostsByCreator,getPostsBySearch } from '../../actions/posts';
 
 const CreatorOrTag = () => {
   const { name } = useParams();
