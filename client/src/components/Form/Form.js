@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { TextField, Button, Typography, Paper } from "@material-ui/core";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+  TextField,
+  Button,
+  Typography,
+  Paper,
+  CircularProgress,
+} from "@material-ui/core";
 import { useDispatch, useSelector } from "react-redux";
 import FileBase from "react-file-base64";
 import { useHistory } from "react-router-dom";
 import ChipInput from "material-ui-chip-input";
+import AddIcon from "@material-ui/icons/Add";
 
 import { createPost, updatePost } from "../../actions/posts";
 import useStyles from "./styles";
@@ -15,6 +22,7 @@ const Form = ({ currentId, setCurrentId }) => {
     tags: [],
     selectedFile: "",
   });
+  const [isUploading, setIsUploading] = useState(false);
   const post = useSelector((state) =>
     currentId
       ? state.posts.posts.find((message) => message._id === currentId)
@@ -24,6 +32,7 @@ const Form = ({ currentId, setCurrentId }) => {
   const classes = useStyles();
   const user = JSON.parse(localStorage.getItem("profile"));
   const history = useHistory();
+  const fileInputRef = useRef(null);
 
   const clear = () => {
     setCurrentId(0);
@@ -35,9 +44,27 @@ const Form = ({ currentId, setCurrentId }) => {
     if (post) setPostData(post);
   }, [post]);
 
+  const handleUploadClick = useCallback(() => {
+    fileInputRef.current.click();
+  }, []);
+
+  const handleDrop = useCallback((event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64String = e.target.result;
+
+        const imageUrl = await uploadImageToCloudinary(base64String);
+        setIsUploading(false);
+        setPostData({ ...postData, selectedFile: imageUrl });
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (currentId === 0) {
       dispatch(createPost({ ...postData, name: user?.result?.name }, history));
       clear();
@@ -68,6 +95,30 @@ const Form = ({ currentId, setCurrentId }) => {
       ...postData,
       tags: postData.tags.filter((tag) => tag !== chipToDelete),
     });
+  };
+
+  const uploadImageToCloudinary = async (base64Image) => {
+    setIsUploading(true);
+    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/dylagiij7/image/upload`;
+    const data = {
+      file: base64Image,
+      upload_preset: "myAppUpload",
+    };
+
+    try {
+      const response = await fetch(cloudinaryUrl, {
+        body: JSON.stringify(data),
+        headers: {
+          "content-type": "application/json",
+        },
+        method: "POST",
+      });
+      const responseData = await response.json();
+      return responseData.secure_url;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
   };
 
   return (
@@ -113,13 +164,45 @@ const Form = ({ currentId, setCurrentId }) => {
           />
         </div>
         <div className={classes.fileInput}>
-          <FileBase
-            type="file"
-            multiple={false}
-            onDone={({ base64 }) =>
-              setPostData({ ...postData, selectedFile: base64 })
-            }
-          />
+          <div
+            style={{
+              border: "1px dashed rgba(0, 0, 0, 0.87)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "160px",
+              width: "100%",
+            }}
+            className="image-uploader"
+            onClick={handleUploadClick}
+          >
+            {isUploading ? (
+              <CircularProgress />
+            ) : postData?.selectedFile ? (
+              <img
+                style={{
+                  width: "100%",
+                  maxHeight: "100%",
+                  objectFit: "contain",
+                }}
+                src={postData?.selectedFile}
+              />
+            ) : (
+              <>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleDrop}
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                />
+
+                <div className="plus-icon">
+                  <AddIcon />
+                </div>
+              </>
+            )}
+          </div>
         </div>
         <Button
           className={classes.buttonSubmit}
