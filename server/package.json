@@ -5,7 +5,13 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testTimeout": 60000
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +25,10 @@
     "mongoose": "^5.9.29"
   },
   "devDependencies": {
-    "nodemon": "^2.0.6"
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^9.1.6",
+    "nodemon": "^2.0.6",
+    "supertest": "^6.3.4"
   }
 }
