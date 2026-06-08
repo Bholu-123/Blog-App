@@ -101,6 +101,22 @@ describe("Update user", () => {
     expect(res.body.message).toBe("Unauthenticated");
   });
 
+  it("PATCH /user/:id with a malformed long token returns 401", async () => {
+    const user = await seedUser();
+
+    // A long (>= 500 char) token hits the jwt.decode branch; junk decodes to
+    // null so no userId is resolved and the request must be rejected.
+    const junkToken = "a".repeat(501);
+
+    const res = await request(app)
+      .patch(`/user/${user._id}`)
+      .set("Authorization", `Bearer ${junkToken}`)
+      .send({ name: "New Name" });
+
+    expect(res.status).toBe(401);
+    expect(res.body.message).toBe("Unauthenticated");
+  });
+
   it("PATCH /user/:id with a token for a different id returns 403", async () => {
     const user = await seedUser();
     const otherId = new mongoose.Types.ObjectId().toString();
